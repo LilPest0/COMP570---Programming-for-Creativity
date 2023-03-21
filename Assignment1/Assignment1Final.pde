@@ -2,12 +2,17 @@
  * COMP570 Programming for Creativity 2023 S1
  * Assignment 1 - Animated Shapes
  * 
- * This program draws a black elipse and a rectangle on the screen
- * that change shape according to mouse movement
- * and can change color with a click
+ * This program draws a two ellipses and two rectangles, one of each being green and the other being red,
+ * displayed on a white canvas. The four shapes are outlined with black, and will resize according to mouse movement.
  *
- * @author Benji Gifford, ID#42069
- * @version 1.0 - 8/03/2023: Created
+ * Upon left-clicking, the shapes and outlines will change to a random color 
+ * and the canvas will shift to a random grayscale.
+ * 
+ * Additionally, the square window deployed by this program is fully resizeable,
+ * and doing so will not hange the functionallity of the program.
+ *
+ * @author Benji Gifford, ID#22182067
+ * @version 1.1 - 15/03/2023: Completed
  */
  
  //color shapeColor = color(0); // global variable for the shape color; start "black"
