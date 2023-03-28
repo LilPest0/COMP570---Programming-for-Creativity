@@ -11,7 +11,7 @@
  * Additionally, the square window deployed by this program is fully resizeable,
  * and doing so will not hange the functionallity of the program.
  *
- * @author Benji Gifford, ID#22182067
+ * @author Benji Gifford, ID#42069
  * @version 1.1 - 15/03/2023: Completed
  */
  
