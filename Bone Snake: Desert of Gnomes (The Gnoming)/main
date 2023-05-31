@@ -1,0 +1,226 @@
+/*
+ * COMP570 Programming for Creativity 2023 S1
+ * Final Project - Bone Snake: Desert of Gnomes (The Gnoming)
+ * 
+ * Bone Snake: Desert of Gnomes (The Gnoming) is a snake-like game 
+ * where you control a massive skeletal sand serpent,
+ * hungry for it's next meal: Desert Gnomes. 
+ * But using ancient desert magic, the gnomes found a way
+ * to summon deadly cactus balls upon their death, with
+ * thorns sharp enough to slay the mightiest bone snake.
+ * Beware, as the gnome's screams only mean a new deadly 
+ * roadblock in your sand-slicing path of destruction.
+ *
+ * @author Benji Gifford, ID#42069
+ * @version 1.7 - 2/06/2023: Completed
+ */
+
+// Import required modules/libraries
+import java.util.ArrayList;
+import java.util.Random; 
+import ddf.minim.*;
+import ddf.minim.analysis.*;
+import ddf.minim.effects.*;
+import ddf.minim.signals.*;
+import ddf.minim.spi.*;
+import ddf.minim.ugens.*;
+
+// Initialize background and sprite images
+PImage backgroundImage;
+PImage titleImage;
+PImage gameOverImage;
+PImage enemyImage; 
+PImage cactusImage; 
+PImage headUpImage;
+PImage headDownImage;
+PImage headLeftImage;
+PImage headRightImage;
+PImage bodyUpImage;
+PImage bodyDownImage;
+PImage bodyRightImage;
+PImage bodyLeftImage;
+
+int resolution = 20;
+int cols, rows;
+boolean gameover = false;
+Snake snake;
+Enemy enemy;
+Minim minim; // Initialize sound library
+Random random; // Used for randomly placing gnomes and cacti
+
+// Initialize Sounds
+AudioPlayer eatSound;
+AudioPlayer deathSound;
+AudioPlayer soundtrack;
+
+int gameState = 0; // Declare a variable to track the game state. 0: Start screen, 1: Game running, 2: Game over.
+int score = 0; // Score based on number of gnomes eaten
+int highScore = 0; // Keeps record of player's high score
+
+// Initialize Cacti
+ArrayList<Cactus> cacti = new ArrayList<Cactus>();
+
+void setup() {
+  minim = new Minim(this);
+  size(800, 800);
+  cols = width / resolution;
+  rows = height / resolution;
+  frameRate(30);
+  snake = new Snake(cols / 2, rows / 2);
+  enemy = new Enemy();
+  random = new Random();
+  loadHighScore();
+  
+  // Load sounds
+  eatSound = minim.loadFile("scream1.mp3"); // Sound of gnome screaming when it gets eaten
+  deathSound = minim.loadFile("death.mp3"); // Sound of bone snake dying
+  soundtrack = minim.loadFile("soundtrack.mp3"); // Background music. (Instrumental to "HOT" by Seventeen)
+  
+  // Load background images
+  backgroundImage = loadImage("desertpixelart.jpg"); // Game background
+  titleImage = loadImage("title.jpg"); // Start screen
+  gameOverImage = loadImage("gameOverImage.jpg"); // Game over screen
+  
+  // Load snake head and body images
+  headUpImage = loadImage("bonehead_up.png");
+  headDownImage = loadImage("bonehead_down.png");
+  headLeftImage = loadImage("bonehead_left.png");
+  headRightImage = loadImage("bonehead_right.png");
+  bodyUpImage = loadImage("bonebody_up.png");
+  bodyDownImage = loadImage("bonebody_down.png");
+  bodyRightImage = loadImage("bonebody_right.png");
+  bodyLeftImage = loadImage("bonebody_left.png");
+  
+  // Load additional sprite images
+  enemyImage = loadImage("gnome.png");
+  cactusImage = loadImage("cactus.png");
+}
+
+void draw() {
+  if (gameState == 0) {
+    // Start screen
+    drawStartScreen();
+  } else if (gameState == 1) {
+    // Game running
+    drawGame();
+  } else if (gameState == 2) {
+    // Game over
+    drawGameOver();
+  }
+}
+
+void keyPressed() {
+  if (gameState == 0) {
+    // Start screen
+    startScreenKeyPressed();
+  } else if (gameState == 1) {
+    // Game running
+    gameKeyPressed();
+  } else if (gameState == 2) {
+    // Game over
+    gameOverKeyPressed();
+  }
+}
+
+void gameKeyPressed() {
+  snake.changeDirection(keyCode);
+}
+
+// Draw Start Screen
+void drawStartScreen() { 
+  image(loadImage("title.jpg"), 0, 0, width, height);
+  soundtrack.rewind();
+  soundtrack.play();
+  soundtrack.loop();
+}
+
+// Draw Game
+void drawGame() { 
+  image(backgroundImage, 0, 0, width, height);
+  if (!gameover) {
+    snake.update();
+    snake.checkCollision(enemy);
+    snake.draw();
+    enemy.draw();
+  } else {
+    drawGameOver();
+  }
+
+  for (Cactus cactus : cacti) {
+    cactus.draw();
+  }
+}
+
+// Draw Game Over
+void drawGameOver() { 
+  cacti.clear();  // Clear cacti
+
+  // Draw the game over screen
+  image(loadImage("gameover.jpg"), 0, 0, width, height);
+  fill(255);
+  textSize(32);
+  textAlign(CENTER);
+  text("Score: " + score, width/2, height/2);
+  text("High Score: " + highScore, width/2, height/2 + 50);
+
+  if (score > highScore) { // If current score beats the high score, record it as the new high score
+    highScore = score;
+    saveHighScore();
+  }
+
+  if (keyCode == ENTER) {
+    gameState = 1; // Switch back to game running state
+  }
+}
+
+// Starts game when the player presses ENTER
+void startScreenKeyPressed() {
+  if (keyCode == ENTER) {
+    gameState = 1; // Switch to game running state
+  }
+}
+
+// Resets game when the player presses ENTER
+void gameOverKeyPressed() {
+  println("here " + keyCode);
+  if (keyCode == ENTER) {
+    
+    // Stop and close the audio players
+    eatSound.close();
+    deathSound.close();
+
+    // Re-initialize the audio players
+    eatSound = minim.loadFile("scream1.mp3");
+    deathSound = minim.loadFile("death.mp3");
+    
+    // Reset necessary variables
+    score = 0;
+    gameover = false;
+    snake = new Snake(cols / 2, rows / 2);
+    enemy = new Enemy();
+    cacti.clear();
+
+    gameState = 1; // Switch back to game running state
+  }
+}
+
+// High score system. Keeps note of player's high score using a .txt file.
+void loadHighScore() {
+  String[] lines = loadStrings("highscore.txt");
+  if (lines.length > 0) {
+    highScore = Integer.parseInt(lines[0]);
+  }
+}
+void saveHighScore() {
+  String[] lines = { Integer.toString(highScore) };
+  saveStrings("highscore.txt", lines);
+}
+
+// Stop sounds when game is closed
+void stop() {
+  eatSound.close();
+  deathSound.close();
+  soundtrack.close();
+  minim.stop();
+  super.stop();
+}
